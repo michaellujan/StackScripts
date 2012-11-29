@@ -22,6 +22,18 @@ function system_apache_cleanup {
     a2dissite default # disable default vhost
 }
 
+function system_install_utils {
+    aptitude -y install htop iotop bsd-mailx python-software-properties zsh
+}
+
+function system_install_build {
+    aptitude -y install build-essential gcc
+}
+
+function system_install_subversion {
+    aptitude -y install subversion
+}
+
 function system_install_git {
 	aptitude -y install git-core
 }
@@ -30,8 +42,10 @@ function system_install_mercurial {
 	aptitude -y install mercurial
 }
 
-function system_install_python_tools {
-	aptitude -y install python-pip python-dev build-essential
+function system_install_python {
+	aptitude -y install python python-dev build-essential
+	easy_install pip
+	pip install virtualenv virtualenvwrapper
 }
 
 function system_install_mongodb {
