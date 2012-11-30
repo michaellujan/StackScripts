@@ -52,19 +52,21 @@ function django_configure_settings {
 function django_configure_wsgi {
 	#django_configure_wsgi(project_path)
 	PROJECT_PATH="$1"
-	cat > "$PROJECT_PATH/$PROJECT_CODE_DIR/$DJANGO_PROJECT/wsgi.py" << EOF
+	FILE_PATH="$PROJECT_PATH/$PROJECT_CODE_DIR/$DJANGO_PROJECT"
+	
+	cat > "$FILE_PATH/wsgi.py" << EOF
 import os
 import sys
 
-path = "'$PROJECT_PATH/$PROJECT_CODE_DIR/$DJANGO_PROJECT'"
+path = '$FILE_PATH'
 if path not in sys.path:
-    sys.path.insert(0, "'$PROJECT_PATH/$PROJECT_CODE_DIR/$DJANGO_PROJECT'")
+    sys.path.insert(0, '$FILE_PATH')
 
-os.environ['DJANGO_SETTINGS_MODULE'] = "'$DJANGO_PROJECT.settings'"
+os.environ['DJANGO_SETTINGS_MODULE'] = '$DJANGO_PROJECT.settings'
 
 import django.core.handlers.wsgi
 application = django.core.handlers.wsgi.WSGIHandler()
-	EOF
+EOF
 }
 
 function django_configure_apache_virtualhost {
