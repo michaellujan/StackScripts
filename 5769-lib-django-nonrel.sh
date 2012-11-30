@@ -32,9 +32,9 @@ function django_create_project {
     $PROJECT_PATH/venv/bin/pip install https://github.com/django-nonrel/mongodb-engine/archive/master.zip
     $PROJECT_PATH/venv/bin/pip install https://github.com/django-nonrel/django-nonrel/archive/django-1.3.2.zip
 
-    pushd "$PROJECT_PATH/$PROJECT_CODE_DIR"
-    "$PROJECT_PATH/venv/bin/python" "$PROJECT_PATH/venv/bin/django-admin.py" startproject "$DJANGO_PROJECT" .
-    popd
+	cd "$PROJECT_PATH/$PROJECT_CODE_DIR/"
+	"$PROJECT_PATH/venv/bin/django-admin.py" startproject "$DJANGO_PROJECT"
+	
     mkdir -p "$PROJECT_PATH/$PROJECT_CODE_DIR/$DJANGO_PROJECT/static"
 
     echo "Django" >> "$PROJECT_PATH/$PROJECT_CODE_DIR/requirements.txt"
@@ -47,6 +47,24 @@ function django_configure_settings {
 	sed -i "s/\.db\.backends\./_mongodb_engine/" "$SETTINGS"
 	sed -i -e "s/'NAME': ''/'NAME': '$DJANGO_PROJECT'/" "$SETTINGS"
 	sed -i "s/.*'django.contrib.staticfiles',.*/&\n    'djangotoolbox',/" "$SETTINGS"
+}
+
+function django_configure_wsgi {
+	#django_configure_wsgi(project_path)
+	PROJECT_PATH="$1"
+	cat > "$PROJECT_PATH/$PROJECT_CODE_DIR/$DJANGO_PROJECT/wsgi.py" << EOF
+import os
+import sys
+
+path = "'$PROJECT_PATH/$PROJECT_CODE_DIR/$DJANGO_PROJECT'"
+if path not in sys.path:
+    sys.path.insert(0, "'$PROJECT_PATH/$PROJECT_CODE_DIR/$DJANGO_PROJECT'")
+
+os.environ['DJANGO_SETTINGS_MODULE'] = "'$DJANGO_PROJECT.settings'"
+
+import django.core.handlers.wsgi
+application = django.core.handlers.wsgi.WSGIHandler()
+	EOF
 }
 
 function django_configure_apache_virtualhost {
@@ -65,7 +83,7 @@ function django_configure_apache_virtualhost {
         return 1;
     fi
     
-    APACHE_CONF="200-$VHOST_HOSTNAME"
+    APACHE_CONF="200-$VHOST_HOSTNAME.conf"
     APACHE_CONF_PATH="$PROJECT_PATH/$PROJECT_CODE_DIR/conf/apache/$APACHE_CONF"
     
     cat > "$APACHE_CONF_PATH" << EOF

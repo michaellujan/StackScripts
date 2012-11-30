@@ -43,8 +43,7 @@ function system_install_mercurial {
 }
 
 function system_install_python {
-	aptitude -y install python python-dev build-essential
-	easy_install pip
+	aptitude -y install python python-dev build-essential python-pip
 	pip install virtualenv virtualenvwrapper
 }
 

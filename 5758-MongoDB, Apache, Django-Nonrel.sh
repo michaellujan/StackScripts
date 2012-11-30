@@ -19,7 +19,7 @@
 # <UDF name="setup_django_project" label="Configure sample django/mod_wsgi project?" oneof="Standalone,InUserHome,InUserHomeRoot" default="Standalone" example="Standalone: project will be created in /srv/project_name directory under new user account; InUserHome: project will be created in /home/$user/project_name; InUserHomeRoot: project will be created in user's home directory (/home/$user)." />
 # <UDF name="django_domain" label="Django domain" default="" example="Your server domain configured in the DNS. Leave blank for RDNS (*.members.linode.com)." />
 # <UDF name="django_project_name" label="Django project name" default="my_project" example="Name of your django project (if 'Create sample project' is selected), i.e. my_website." />
-# <UDF name="django_user" label="Django project owner user" default="django" example="System user that will be used to run the mod-wsgi project process in the 'Standalone' setup mode." />
+# <UDF name="django_user" label="Django project owner user" default="" example="System user that will be used to run the mod-wsgi project process in the 'Standalone' setup mode. Defaults to unprivileged account name provided above." />
 
 # <UDF name="sys_private_ip" Label="Private IP" default="" example="Configure network card to listen on this Private IP (if enabled in Linode/Remote Access settings tab). See http://library.linode.com/networking/configuring-static-ip-interfaces" />
 
@@ -109,14 +109,13 @@ if [ -z "$DJANGO_DOMAIN" ]; then DJANGO_DOMAIN=$RDNS; fi
 case "$SETUP_DJANGO_PROJECT" in
 Standalone)
     DJANGO_PROJECT_PATH="/srv/$DJANGO_PROJECT_NAME"
+    
     if [ -n "$DJANGO_USER" ]; then
         if [ "$DJANGO_USER" != "$USER_NAME" ]; then
             system_add_system_user "$DJANGO_USER" "$DJANGO_PROJECT_PATH" "$USER_SHELL"
-        else
-            mkdir -p "$DJANGO_PROJECT_PATH"
         fi
     else
-        DJANGO_USER="www-data"
+        DJANGO_USER=$USER_NAME
     fi
   ;;
 InUserHome)
@@ -132,7 +131,8 @@ esac
 django_create_project "$DJANGO_PROJECT_PATH"
 django_change_project_owner "$DJANGO_PROJECT_PATH" "$DJANGO_USER"
     
-django_configure_settings
+django_configure_settings "$DJANGO_PROJECT_PATH"
+django_configure_wsgi "$DJANGO_PROJECT_PATH"
 django_configure_apache_virtualhost "$DJANGO_DOMAIN" "$DJANGO_PROJECT_PATH" "$DJANGO_USER"
 touch /tmp/restart-apache2    
 system_record_etc_dir_changes "Configured django project '$DJANGO_PROJECT_NAME'" # SS5770
